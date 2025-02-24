@@ -10,6 +10,7 @@ Amazon limits scraping to only 100 values and has systems in place to prevent wo
 Currently working on sentiment analysis with the scraped csv files
 
 **Example CSV File**
+
 Scraped a book of the internet:
 
 
