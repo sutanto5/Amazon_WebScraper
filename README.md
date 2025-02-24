@@ -6,8 +6,10 @@ This project explores webscraping and sentiment analysis. It uses selenium to we
 Amazon limits scraping to only 100 values and has systems in place to prevent workarounds, need to figure out how to get past that
 
 **Current Work**
+
 Currently working on sentiment analysis with the scraped csv files
-sdfsd**Example CSV File**
+
+**Example CSV File**
 Scraped a book of the internet:
 
 
