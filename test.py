@@ -1,5 +1,6 @@
 import time
 import pandas as pd
+import re  # Import regex module to extract numbers safely
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -11,7 +12,7 @@ import KEYS
 # Replace with your Amazon credentials
 AMAZON_EMAIL = KEYS.EMAIL
 AMAZON_PASSWORD = KEYS.PSWD
-OUTPUT_FILE = "amazon_reviews.csv"  # The file to store all reviews
+OUTPUT_FILE = KEYS.CSV  # The file to store all reviews
 
 # Set up Selenium WebDriver
 options = Options()
@@ -23,9 +24,7 @@ options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) App
 service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=options)
 
-# Purpose: Login to Amazon then move to the reviews page
-# Input: NONE (technically email and password)
-# Output: Prints signal when logged in
+# Function to log into Amazon
 def amazon_login():
     """Logs into Amazon and navigates to the reviews page."""
     driver.get(KEYS.URL)
@@ -48,12 +47,10 @@ def amazon_login():
 
     print("Login successful!")
 
-# Purpose: Scrape amazon reviews of given book including username, review date, and content of review
-# Input: Book URL
-# Output: CSV with reviews up to I think 100
+# Function to scrape Amazon reviews including username, review date, rating, and review text
 def scrape_reviews():
-    """Scrapes customer reviews and appends to a single CSV file."""
-    driver.get("https://www.amazon.com/Hillbilly-Elegy-Memoir-Family-Culture/product-reviews/0062300547/")
+    """Scrapes customer reviews including User Name, Review Date, Review Rating, and Review Body."""
+    driver.get(KEYS.BODY)
     time.sleep(5)
 
     first_page = True  # Track whether it's the first page (for CSV header handling)
@@ -62,7 +59,7 @@ def scrape_reviews():
         reviews = []
         print("Scraping current page...")
 
-        # Find all review containers where ID starts with 'customer-review'
+        # Find all review containers where ID starts with 'customer_review-'
         review_containers = driver.find_elements(By.XPATH, "//*[starts-with(@id, 'customer_review-')]")
         print(f"Found {len(review_containers)} reviews on this page.")
 
@@ -73,6 +70,20 @@ def scrape_reviews():
                 
                 # Extract Review Date
                 review_date = review.find_element(By.XPATH, ".//*[contains(@class, 'review-date')]").text.strip()
+
+                # Extract Review Rating using a robust XPath
+                try:
+                    rating_element = review.find_elements(By.XPATH, ".//i[contains(@class, 'review-rating')]/span")
+                    print("This is the rating: " + rating_element)
+                    if rating_element:
+                        rating_text = rating_element[0].text.strip()  # Get the text from span
+                        rating_match = re.findall(r"[\d.]+", rating_text)  # Extract numbers (e.g., "5.0" from "5.0 out of 5 stars")
+                        rating = float(rating_match[0]) if rating_match else None  # Convert to float
+                    else:
+                        rating = None  # If no rating exists
+                except Exception as e:
+                    print(f"Error extracting rating: {e}")
+                    rating = None  # Set rating as None if missing
                 
                 # Extract Review Body
                 body = review.find_element(By.XPATH, ".//*[contains(@class, 'review-text-content')]")
@@ -82,6 +93,7 @@ def scrape_reviews():
                 reviews.append({
                     "User Name": user_name,
                     "Review Date": review_date,
+                    "Review Rating": rating,  # Numerical rating
                     "Review Body": review_text
                 })
             except Exception as e:

@@ -54,8 +54,10 @@ def amazon_login():
 # Output: CSV with reviews up to I think 100
 def scrape_reviews():
     
-    #opens the given url
-    driver.get(KEYS.PRODUCT)
+    #opens the given url for the product review page
+    driver.get(KEYS.ANXIOUS)
+
+    #gives it time to load
     time.sleep(5)
 
     first_page = True  # Track whether it's the first page (for CSV header handling)
@@ -79,11 +81,18 @@ def scrape_reviews():
                 # Extract Review Body
                 body = review.find_element(By.XPATH, ".//*[contains(@class, 'review-text-content')]")
                 review_text = body.text.strip()
-                
+
+                # Extract Rating 
+                rating_element = review.find_element(By.CLASS_NAME, "review-rating").find_element(By.CLASS_NAME, "a-icon-alt")
+                rating_text = rating_element.get_attribute("innerHTML")
+
+                print("The rating is: " + rating_text)
+
                 # Save data
                 reviews.append({
                     "User Name": user_name,
                     "Review Date": review_date,
+                    "Rating": rating_text,
                     "Review Body": review_text
                 })
             except Exception as e:
