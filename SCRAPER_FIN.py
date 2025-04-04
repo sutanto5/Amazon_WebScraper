@@ -55,7 +55,7 @@ def amazon_login():
 def scrape_reviews():
     
     #opens the given url for the product review page
-    driver.get(KEYS.ANXIOUS)
+    driver.get(KEYS.FILE)
 
     #gives it time to load
     time.sleep(5)
@@ -75,16 +75,18 @@ def scrape_reviews():
                 # Extract User Name
                 user_name = review.find_element(By.XPATH, ".//*[contains(@class, 'a-profile-name')]").text.strip()
                 
-                # Extract Review Date
+                # Extract Review Date and clean it to only show the date
                 review_date = review.find_element(By.XPATH, ".//*[contains(@class, 'review-date')]").text.strip()
+                review_date = review_date.split(' on ')[-1]  # Only keep the date part
                 
                 # Extract Review Body
                 body = review.find_element(By.XPATH, ".//*[contains(@class, 'review-text-content')]")
                 review_text = body.text.strip()
 
-                # Extract Rating 
+                # Extract Rating and clean it to only show the number
                 rating_element = review.find_element(By.CLASS_NAME, "review-rating").find_element(By.CLASS_NAME, "a-icon-alt")
                 rating_text = rating_element.get_attribute("innerHTML")
+                rating_text = rating_text.split(' ')[0]  # Only keep the number part
 
                 print("The rating is: " + rating_text)
 

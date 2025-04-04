@@ -49,19 +49,29 @@ def amazon_login():
 
 # Function to scrape Amazon reviews including username, review date, rating, and review text
 def scrape_reviews():
-    """Scrapes customer reviews including User Name, Review Date, Review Rating, and Review Body."""
-    driver.get(KEYS.BODY)
-    time.sleep(5)
-
-    first_page = True  # Track whether it's the first page (for CSV header handling)
+    first_page = True  # For CSV header handling
+    page = 1           # Start at page 1
 
     while True:
+        # Build the URL by appending the page number.
+        url = f"{KEYS.ANXIOUS}&pageNumber={page}"
+        driver.get(url)
+        time.sleep(5)
+
         reviews = []
-        print("Scraping current page...")
+        print(f"Scraping page {page}...")
+
+        # Scroll down to ensure any lazy-loaded elements appear
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(2)
 
         # Find all review containers where ID starts with 'customer_review-'
         review_containers = driver.find_elements(By.XPATH, "//*[starts-with(@id, 'customer_review-')]")
-        print(f"Found {len(review_containers)} reviews on this page.")
+        print(f"Found {len(review_containers)} reviews on page {page}.")
+
+        if len(review_containers) == 0:
+            print("No reviews found on this page. Exiting loop.")
+            break
 
         for review in review_containers:
             try:
@@ -70,57 +80,42 @@ def scrape_reviews():
                 
                 # Extract Review Date
                 review_date = review.find_element(By.XPATH, ".//*[contains(@class, 'review-date')]").text.strip()
-
-                # Extract Review Rating using a robust XPath
-                try:
-                    rating_element = review.find_elements(By.XPATH, ".//i[contains(@class, 'review-rating')]/span")
-                    print("This is the rating: " + rating_element)
-                    if rating_element:
-                        rating_text = rating_element[0].text.strip()  # Get the text from span
-                        rating_match = re.findall(r"[\d.]+", rating_text)  # Extract numbers (e.g., "5.0" from "5.0 out of 5 stars")
-                        rating = float(rating_match[0]) if rating_match else None  # Convert to float
-                    else:
-                        rating = None  # If no rating exists
-                except Exception as e:
-                    print(f"Error extracting rating: {e}")
-                    rating = None  # Set rating as None if missing
                 
                 # Extract Review Body
                 body = review.find_element(By.XPATH, ".//*[contains(@class, 'review-text-content')]")
                 review_text = body.text.strip()
-                
+
+                # Extract Rating 
+                rating_element = review.find_element(By.CLASS_NAME, "review-rating").find_element(By.CLASS_NAME, "a-icon-alt")
+                rating_text = rating_element.get_attribute("innerHTML")
+
+                print("The rating is: " + rating_text)
+
                 # Save data
                 reviews.append({
                     "User Name": user_name,
                     "Review Date": review_date,
-                    "Review Rating": rating,  # Numerical rating
+                    "Rating": rating_text,
                     "Review Body": review_text
                 })
             except Exception as e:
                 print(f"Skipping review due to error: {e}")
                 continue
 
-        # Append data to a single CSV file
+        # Append data to CSV
         df = pd.DataFrame(reviews)
         if first_page:
-            df.to_csv(OUTPUT_FILE, mode='w', index=False)  # Overwrite if first page
-            first_page = False  # Next pages will append
+            df.to_csv(OUTPUT_FILE, mode='w', index=False)
+            first_page = False
         else:
-            df.to_csv(OUTPUT_FILE, mode='a', header=False, index=False)  # Append for subsequent pages
+            df.to_csv(OUTPUT_FILE, mode='a', header=False, index=False)
+        print(f"Saved reviews from page {page} to {OUTPUT_FILE}.")
 
-        print(f"Saved reviews to {OUTPUT_FILE}.")
-
-        # Try to go to the next page
-        try:
-            next_button = driver.find_element(By.XPATH, "//li[@class='a-last']/a")
-            driver.execute_script("arguments[0].click();", next_button)
-            time.sleep(5)
-        except:
-            print("No more pages. Exiting loop.")
-            break  
+        page += 1  # Move to the next page
 
     driver.quit()
     print("Scraping complete.")
+
 
 # Run the login function first
 amazon_login()
