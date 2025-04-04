@@ -1,19 +1,25 @@
-**Description**
+# Description
 
-This project explores webscraping and sentiment analysis. It uses selenium to webscrape product reviews from the specified amazon product and saves them into a csv file for use in sentiment analysis
+This project explores **web scraping** and **sentiment analysis**.  
+It uses **Selenium** to scrape product reviews from a specified Amazon product page and saves them into a CSV file for later use in sentiment analysis.
 
-**Problem**
-Amazon limits scraping to only 100 values and has systems in place to prevent workarounds, need to figure out how to get past that
+---
 
-**Current Work**
+# Problem
 
-Currently working on sentiment analysis with the scraped csv files
+Amazon limits scraping to only 100 reviews and has systems in place to detect and prevent workarounds.  
+A more robust solution is needed to bypass these limitations and access more review data reliably.
 
-**Example CSV File**
+---
 
-Scraped a book of the internet:
+# Current Work
 
+Currently focusing on **sentiment analysis** using the scraped CSV files.
+
+---
+
+# Example CSV File
+
+Scraped data from a book on Amazon:
 
 <img width="1209" alt="Screenshot 2025-02-23 at 9 33 39 PM" src="https://github.com/user-attachments/assets/62b66c66-7214-4967-81d7-c11fb5c98e8c" />
-
-
